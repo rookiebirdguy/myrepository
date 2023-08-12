@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: Montserrat;
+      background-color: #FFFFFF;
+    }
+    .widget {
+      width: 430px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #fff;
+      border: 0px #ccc;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .status {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .time-left {
+      font-size: 1em;
+      color: #999;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background-color: #ccc;
+      border-radius: 10px;
+      position: relative;
+      top: 10px
+    }
+    .progress-bar-fill {
+      width: 0%;
+      height: 20px;
+      background-color: #2832c2;
+      border-radius: 10px;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    .progress-bar-fill.is-green {
+      background-color: #00FF00;
+    }
+    .progress-bar-fill::before {
+      content: "";
+      position: absolute;
+      top: -25px;
+      left: calc(100% - 30px);
+      width: 70px;
+      height: 70px;
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-image: url(icon.png);
+    }
+  </style>
+</head>
+<body>
+  <div class="widget">
+    <div class="status">
+      <span id="cargo-status"></span>
+    </div>
+    <div class="time-left">
+
+      <span id="etd"></span>
+      <span id="eta"></span>
+      <span id="time-left"></span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-bar-fill"></div>
+    </div>
+  </div>
+  <script>
+    var now = new Date();
+    var etd = new Date("2023-08-13T03:30:00"); // Replace with actual ETD
+    var eta = new Date("2023-08-13T09:50:00"); // Replace with actual ETA
+    var status;
+    var timeLeft;
+
+    function updateStatusAndTime() {
+      now = new Date();
+      if (now < etd) {
+        status = "Scheduled";
+      } else if (now >= etd && now < eta) {
+        status = "In flight";
+      } else {
+        status = "Arrived";
+      }
+      if (now < eta) {
+        var msLeft = eta - now;
+        var hoursLeft = Math.floor(msLeft / (1000 * 60 * 60));
+        var minsLeft = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+        var secsLeft = Math.floor((msLeft % (1000 * 60)) / 1000);
+        timeLeft = ("0" + hoursLeft).slice(-2) + ":" + ("0" + minsLeft).slice(-2) + ":" + ("0" + secsLeft).slice(-2);
+      } else {
+        timeLeft = "00:00:00";
+      }
+      document.getElementById("cargo-status").textContent = status;
+      document.getElementById("time-left").textContent = "Time left: " + timeLeft;
+    }
+
+    function updateProgressBar() {
+      var progress = (now - etd) / (eta - etd);
+      var progressBarFill = document.querySelector(".progress-bar-fill");
+      progressBarFill.style.width = progress * 100 + "%";
+      if (progress >= 1) {
+        progressBarFill.style.width = "100%";
+        clearInterval(progressInterval);
+      }
+    }
+
+    function formatTime(date) {
+      var hours = ("0" + date.getHours()).slice(-2);
+      var minutes = ("0" + date.getMinutes()).slice(-2);
+      return hours + ":" + minutes;
+    }
+function formatDate(date) {
+  var month = ("0" + (date.getMonth() + 1)).slice(-2);
+  var day = ("0" + date.getDate()).slice(-2);
+  var hours = ("0" + date.getHours()).slice(-2);
+  var minutes = ("0" + date.getMinutes()).slice(-2);
+  return month + "/" + day + " " + hours + ":" + minutes;
+}
+
+    document.getElementById("etd").textContent = "ETD: " + formatDate(etd);
+    document.getElementById("eta").textContent = "ETA: " + formatDate(eta);
+
+    updateStatusAndTime();
+    updateProgressBar();
+
+    var progressInterval = setInterval(function() {
+      updateStatusAndTime();
+      updateProgressBar();
+    }, 1000);
+  </script>
+</body>
+</html>
